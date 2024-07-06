@@ -1,0 +1,19 @@
+{
+  "name": "veza-query-repo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "zkhoo@veza.com",
+  "license": "MIT-0",
+  "dependencies": {
+    "command-line-args": "^5.2.1",
+    "command-line-usage": "^7.0.1",
+    "dotenv": "^16.4.5",
+    "lodash.isequal": "^4.5.0",
+    "uuid": "^10.0.0"
+  }
+}
