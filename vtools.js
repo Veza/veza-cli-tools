@@ -5,11 +5,12 @@ import commandLineUsage from 'command-line-usage';
 import isEqual from 'lodash.isequal';
 import { v4 as uuidv4 } from 'uuid';
 import readline from 'readline';
+import { mkConfig, generateCsv, asString } from "export-to-csv";
+import { Buffer } from "node:buffer";
 
 
 const uuidCheck = new RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$');
 const duplicateCheck = new RegExp('A query with this name already exists');
-const ERR_DUPLICATION = 'ERROR: Duplication';
 
 async function listSavedQueries() {
   const res = await fetch(
@@ -122,10 +123,16 @@ function info(file) {
   try {
     const json = fs.readFileSync(file, 'utf-8');    
     const bundle = JSON.parse(json);
-    let report = bundle.reports[0];
     let queries = bundle.queries;
+    let report = bundle.reports[0];
+    if (!report) {
+      report = 'noreport';
+    } else {
+      report = report.name;
+    }
 
-    console.log(`# queries: ${queries.length}`)
+    console.log(`# queries: ${queries.length}`);
+    let queryTuples = [];
     queries.forEach(q => {
       const name = q.name;
       let from = "";
@@ -134,7 +141,23 @@ function info(file) {
       } catch(er) {}
       const to = q.destination_types
       const integrationTypes = q.integration_types;
-      console.log(`${name.trim()}\n  ${from} -> [${to}] [[${integrationTypes}]]`);
+      queryTuples.push({
+        name: name.trim(), 
+        from, 
+        to: to.toString(), 
+        integrationTypes: integrationTypes.toString()
+      });
+    });
+    const filename = `./out/${report}.info.csv`;
+    const csvConfig = mkConfig({
+      useKeysAsHeaders: true,
+      filename: filename
+    });
+    const csv = generateCsv(csvConfig)(queryTuples);
+    const csvBuffer = new Uint8Array(Buffer.from(asString(csv)));
+    fs.writeFile(filename, csvBuffer, (err) => {
+      if (err) throw err;
+      console.log("Result saved to file: ", filename);
     });
   } catch(e) {
     console.log(e);
@@ -181,6 +204,9 @@ function tidy(file) {
   }  
 }
 
+function labelFromReportName(reportName) {
+  return `report${reportName.replaceAll("-", "").replaceAll(/[a-z]/gi, "")}`;
+}
 
 async function importFile(file) {
   try {
@@ -191,13 +217,25 @@ async function importFile(file) {
       throw new Error('CLI only supports importing 1 report at a time');
     }
 
+    var label;
     const reportUuid = uuidv4();
     console.log(`Importing with id ${reportUuid}`);
     if (bundle.reports.length > 0) {
       bundle.reports[0].id = reportUuid;
+      label = labelFromReportName(reportUuid);
+    } else {
+      label = labelFromReportName(reportUuid);
     }
 
     let queries = bundle.queries;
+    queries.forEach(q => {
+      if (q.labels) {
+        q.labels.push(label);
+      } else {
+        q.labels = [label];
+      }      
+    });
+
     const dedupedIds = await dedupQueries(queries, reportUuid);
 
     await delay(1000);
@@ -248,11 +286,11 @@ async function importFile(file) {
       }
     })
 
-    console.log('SUMMARY:\n---------------------');
-    console.log(`  # of queries in the original file: ${qLength}`);
-    console.log(`  # of query names updated to avoid collision: ${i}`);
-    console.log(`  # of queries removed from the payload because it can be re-referenced: ${j}`);
-    console.log(`  # of new query Ids generated so that we avoid collision: ${z}`);
+    console.log('---------------------\nSUMMARY:');
+    console.log(` # of queries in the original file: ${qLength}`);
+    console.log(` # of query names updated to avoid collision: ${i}`);
+    console.log(` # of queries removed from the payload because it can be re-referenced: ${j}`);
+    console.log(` # of new query Ids generated so that we avoid collision: ${z}`);
 
     return JSON.stringify(JSON.parse(json), null, 2);
   } catch(e) {
@@ -271,7 +309,7 @@ async function doImport(payload) {
     });
     console.log(`Import status: ${res.status}`);
     const output = await res.json();
-    console.log(output);
+    console.log(JSON.stringify(output, null, 2));
   } catch(e) {
     throw new Error(e);
   }
@@ -578,7 +616,7 @@ async function main() {
         doImport(payload);
       }
     } catch(e) {
-      console.log(e);
+      console.log(JSON.stringify(e, null, 2));
     }
     return;
   }
