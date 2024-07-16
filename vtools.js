@@ -125,27 +125,37 @@ function info(file) {
     const bundle = JSON.parse(json);
     let queries = bundle.queries;
     let report = bundle.reports[0];
+    let sections = [];
     if (!report) {
       report = 'noreport';
     } else {
+      sections = report.sections;
       report = report.name;
     }
+    // console.log(`sections: ${sections}`);
 
     console.log(`# queries: ${queries.length}`);
     let queryTuples = [];
     queries.forEach(q => {
       const name = q.name;
+
       let from = "";
       try {
         from = q.source_node_types.nodes[0].node_type;
       } catch(er) {}
-      const to = q.destination_types
-      const integrationTypes = q.integration_types;
+
+      let section = sections.find(x => { return x.queries.includes(q.id) });
+      section = section? section.name : "";
+
       queryTuples.push({
+        id: q.id,
         name: name.trim(), 
+        risk_level: q.risk_level,
+        section: section,
+        labels: q.labels.toString(),
         from, 
-        to: to.toString(), 
-        integrationTypes: integrationTypes.toString()
+        to: q.destination_types.toString(), 
+        integrationTypes: q.integration_types.toString()
       });
     });
     const filename = `./out/${report}.info.csv`;
@@ -607,12 +617,16 @@ async function main() {
   if (options['import'] || options['offline']) {
     try {
       const payload = await importFile(fileLocation);
+
+      let outfile = 'offline.json';
+      const json = JSON.parse(payload);
+      if (json.reports.length > 0) {
+        outfile = `${json.reports[0].name}.offline.json`;
+      }
+      fs.writeFileSync(`./out/${outfile}`, payload);
       if (options['offline']) {
-        fs.writeFileSync('./out/offline.json', payload);
+        console.log(`file saved to /out/${outfile}`)
       } else {
-        if (options['offline']) {
-          fs.writeFileSync('debug.json', payload);
-        }
         doImport(payload);
       }
     } catch(e) {
