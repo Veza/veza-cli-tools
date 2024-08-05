@@ -38,15 +38,14 @@ You can also set values for the *source* Veza tenant if you intend to download o
 
 To run the script in interactive mode:
 
-`npm run vtools.js`
+`npm run vtools`
 
 You will be presented with several options:
 
-(c) check for the existence of a query name in the destination tenant
-(g) GET an object from the source Veza tenant and save it as `./in/in.json`
-(p) push the `./out/out.json` object to the destination Veza tenant
-(s) show status
-(u) update `./in/in.json` and save the result to the output folder
-(x) exit
-
-The (u) option parses the file in `in.json` and updates ids so that no collisions occur when the file is pushed to the destination Veza tenant.
+* (c) check for the existence of a query name in the destination tenant
+* (g) GET an object from the source Veza tenant and save it as `./in/in.json`
+* (p) push the `./out/out.json` object to the destination Veza tenant
+* (s) show status
+* (u) update `./in/in.json` and save the result to the output folder
+* (x) exit
+* The (u) option parses the file in `in.json` and updates ids so that no collisions occur when the file is pushed to the destination Veza tenant.

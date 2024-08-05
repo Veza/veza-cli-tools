@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "vtools": "node vtools.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "zkhoo@veza.com",
