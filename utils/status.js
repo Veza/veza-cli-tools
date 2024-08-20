@@ -74,17 +74,12 @@ export async function get_obj_metadata(obj) {
     name: 'none'
   };
 
-  if (obj.hasOwnProperty('reports')) {
+  if (obj.reports.length > 0) {
     obj_metadata.type = 'report';
     obj_metadata.name = obj.reports[0].name;
-  }
-  else if (obj.hasOwnProperty('value')) {
-    let val = obj.value;
-
-    if (val.hasOwnProperty('query_type')) {
-      obj_metadata.type = 'query';
-      obj_metadata.name = obj.description;
-    }
+  } else {
+    obj_metadata.type = 'query';
+    obj_metadata.name = obj.queries[0].name;
   }
   return obj_metadata;
 }

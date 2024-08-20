@@ -22,7 +22,8 @@ export async function get_obj_from_veza(obj_type, obj_id) {
     full_url = `${global.src_tenant}/api/private/assessments/metadata/export?report_ids=${obj_id}`;
   }
   else if (obj_type == 'q') {
-    full_url = `${global.src_tenant}/api/v1/assessments/queries/${obj_id}`;
+    // full_url = `${global.src_tenant}/api/v1/assessments/queries/${obj_id}`;
+    full_url = `${global.src_tenant}/api/private/assessments/metadata/export?query_ids=${obj_id}`;
   }
 
   try {
@@ -67,6 +68,9 @@ async function getSpecId(spec, uuid) {
       if (specB.query_type == 'SYSTEM_CREATED' && specB.created_at == specB.updated_at) {
         return null;
       } else {
+        if (specB.query_type  == 'SYSTEM_CREATED') {
+          console.log(`SYSTEM query ${specB.name} was modified. Will be duplicated to avoid collision`);
+        }
         // Otherwise create a new query from the provided spec, even if the definitions are the same.
         let specC = JSON.parse(JSON.stringify(spec));
         specC.name = await uniqueNameWithUuid(spec.name, uuid); // Make sure name does not collide
@@ -244,8 +248,8 @@ export async function hasDupName(name) {
   // return false;
 }
 
-function labelFromReportName(reportName) {
-  return `report${reportName.replaceAll("-", "").replaceAll(/[a-z]/gi, "")}`;
+function makeLabel(prefix, id) {
+  return `${prefix}${id.replaceAll("-", "").replaceAll(/[a-z]/gi, "")}`;
 }
 
 export async function updateJSON(bundle) {
@@ -259,18 +263,14 @@ export async function updateJSON(bundle) {
 
     // generate a new uuid for this object
     const reportUuid = uuidv4();
-
-    const suffix = reportUuid.slice(0, 4); // to append to end of report name
-
-    console.log(`Importing with id ${reportUuid}`);
     
-    bundle.reports[0].name = bundle.reports[0].name + " " + suffix;
-
     if (bundle.reports.length > 0) {
+      const suffix = reportUuid.slice(0, 4); // to append to end of report name
+      bundle.reports[0].name = bundle.reports[0].name + " " + suffix;
       bundle.reports[0].id = reportUuid;
-      label = labelFromReportName(reportUuid);
+      label = makeLabel('report', reportUuid);
     } else {
-      label = labelFromReportName(reportUuid);
+      label = makeLabel('query', reportUuid);
     }
 
     let queries = bundle.queries;
@@ -288,12 +288,6 @@ export async function updateJSON(bundle) {
     console.log('Done checking for collisions.\nCleaning up...............................................');
     await delay(2300);
 
-    console.log("de duped ids:");
-    console.dir(dedupedIds);
-
-    console.log("queries");
-    console.dir(queries);
-
     const qLength = queries.length;
     let i = 0;
     // Update query name to avoid name collision
@@ -303,30 +297,18 @@ export async function updateJSON(bundle) {
         if (dedupedIds[k]) {
           // all queries should be SOURCE_TO_DESTINATION
           queries[index].query_type = 'SOURCE_TO_DESTINATION';
-
-          console.log(`comparing ${dedupedIds[k].name} to ${queries[index].name}`)
-
+          
           if (dedupedIds[k].name != queries[index].name ) {
-
-            console.log("the names are not equal.");
-
-            // queries[index].name = queries[index].name + " " + queries[index].id.substring(0, 4);
-            // queries[index].name = dedupedIds[k].name;
-            // console.log(`Update query name to avoid collision: ${queries[index].name}`);
+            queries[index].name = dedupedIds[k].name;
+            console.log(`Update query name to avoid collision: ${queries[index].name}`);
             i++;
-          }
-          else {
-            console.log("the names are equal.")
-            console.log(`the new query name is: ${queries[index].name}`)
-
-            queries[index].name = queries[index].name + " " + dedupedIds[k].id.substring(0, 4);
           }
         }
       }
     })
 
     let j = 0;
-    // Remove existing queries because we don't need to create them.
+    // Remove existing, unmodified SYSTEM queries because we don't need to create them.
     Object.keys(dedupedIds).forEach(k => {
       const index = queries.findIndex(q => { return q.id == k; });
       if (index > -1) {
@@ -490,7 +472,7 @@ function trimSpec(spec) {
 }
 
 /********************************* */
-// Zee's functions
+// Unused
 
 async function listSavedQueries() {
   const res = await fetch(

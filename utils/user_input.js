@@ -10,28 +10,22 @@ import { display_status, get_obj_metadata } from './status.js';
 
 export async function evaluate_user_response(user_response) {
 
-  if (user_response == 'c') {
-    await user_input_check_name();
-  }
-  if (user_response == 'g') {
+  if (user_response == '1') {
     await user_input_get_object();
-  }
-  else if (user_response == 'm') {
-    return
-  }
-  else if (user_response == 'p') {
+  } else if (user_response == '2') {
+    await user_input_update_object();    
+  } else if (user_response == '3') {
     await user_input_push_object();
-  }
-  else if (user_response == 's') {
+  } else if (user_response == '4') {
+    await user_input_check_name();
+  } else if (user_response == '5') {
     await display_status();
-  }
-  else if (user_response == 'u') {
-    await user_input_update_object();
-  }
-  else if (user_response == 'x') {
+  } else if (user_response == 'x') {
     console.log("exiting...");
     process.exit();
-  }
+  } else if (user_response == 'm') {
+    return
+  } 
   return
 }
 
@@ -96,7 +90,7 @@ async function user_input_get_object() {
   let valid_inputs;
 
   // confirm source tenant
-  question = `do you want to pull an object from ${global.src_tenant}? (Y/n) `;
+  question = `do you want to pull a Report/Query from ${global.src_tenant}? (Y/n) `;
 
   user_response = await get_user_input(question);
 
@@ -164,7 +158,7 @@ async function user_input_push_object() {
   let metadata = await get_obj_metadata(json);
 
   // push new object to Veza tenant?
-  let question = `do you want to push the ${metadata.type} ${metadata.name} to ${global.dest_tenant}? (Y/n) `;
+  let question = `do you want to push the ${metadata.type} "${metadata.name}" to ${global.dest_tenant}? (Y/n) `;
 
   let user_response = await get_user_input(question);
 
@@ -182,7 +176,7 @@ async function user_input_update_object() {
   let metadata = await get_obj_metadata(json);
 
   // generate a new file without collisions
-  let question = `do you want to update the ${metadata.type} ${metadata.name}? (Y/n) `;
+  let question = `do you want to update the ${metadata.type} "${metadata.name}"? (Y/n) `;
 
   let user_response = await get_user_input(question);
 
