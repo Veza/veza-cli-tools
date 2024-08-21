@@ -41,11 +41,9 @@ To run the script in interactive mode:
 `npm run vtools`
 
 You will be presented with several options:
-
-* (c) check for the existence of a query name in the destination tenant
-* (g) GET an object from the source Veza tenant and save it as `./in/in.json`
-* (p) push the `./out/out.json` object to the destination Veza tenant
-* (s) show status
-* (u) update `./in/in.json` and save the result to the output folder
+* (1) Export a Report or Query from the source Veza tenant and save it as `./in/in.json`
+* (2) Prepare the `./in/in.json` (update Ids to avoid collisions) and save the result to `./out/out.json`
+* (3) Push the './out/out.json' object to the destination Veza tenant
+* (4) Check for the existence of a query name in the destination tenant
+* (5) Display configuration variables
 * (x) exit
-* The (u) option parses the file in `in.json` and updates ids so that no collisions occur when the file is pushed to the destination Veza tenant.
