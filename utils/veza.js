@@ -178,7 +178,7 @@ export async function doImport(payload) {
   }
 }
 
-function generateVersionName(name) {
+export function generateVersionName(name) {
 
   const exp1 = new RegExp("\\([0-9]+\\)$", "g");
 
@@ -203,12 +203,11 @@ async function val_in_obj(name, obj) {
 
   for (const q of obj) {
 
-    console.log(`comparing ${q.name} to ${name}`);
-  
-    console.log(`Duplicate query name: ${name}`);
-    if (q.name) {
+    console.log(`Comparing "${q.name}" to "${name}"`);
 
-      if (q.name.toLowerCase() == name) {
+    if (q.name) {
+      if (q.name.toLowerCase() == name.toLowerCase()) {
+        console.log(`Duplicate query name: ${name}`);
         return true;
       }
     }
@@ -245,7 +244,6 @@ export async function hasDupName(name) {
   } catch (e) {
     console.log(e);
   }
-  // return false;
 }
 
 function makeLabel(prefix, id) {

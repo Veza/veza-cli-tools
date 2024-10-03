@@ -8,7 +8,7 @@ import { file_paths, menu, optionList, sections } from './config/options.js';
 import { init } from './utils/init.js';
 import { check_for_dirs, display_status } from './utils/status.js';
 import { evaluate_user_response, get_user_input } from './utils/user_input.js';
-import { tidy } from './utils/veza.js';
+import { tidy, generateVersionName } from './utils/veza.js';
 
 /****************************************************************** */
 
@@ -42,6 +42,12 @@ async function evaluate_command_line_args(options) {
         console.error(`could not find the file ${file_path}`);
       }
     }
+  } else if (options['name-gen']) {
+    console.log('Testing generateVersionName...');
+    const user_response = await get_user_input("name: ", false);
+    const newV = generateVersionName(user_response);
+    console.log(newV);
+    return
   }
 }
 

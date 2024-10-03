@@ -19,6 +19,13 @@ export const optionList = [
     default: false
   },
   {
+    name: 'name-gen',
+    description: 'Test',
+    type: Boolean,
+    alias: 'g',
+    default: false
+  },
+  {
     name: 'import',
     description: 'Do import',
     type: Boolean,
